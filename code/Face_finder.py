@@ -4,8 +4,9 @@ import base64
 import json
 import threading
 
+
 def img_change_to_BASE64(img):
-    image = cv2.imencode('.jpg',img)[1]
+    image = cv2.imencode('.png',img)[1]
     image_code =str(base64.b64encode(image))[2:-1]
     return image_code
 
@@ -26,22 +27,28 @@ class Face_finder:
         self.type = "BASE64"
         self.result_list = []
         
-    def set_parameter_of_aip(self,app_id,aip_id,secret_key):
+    def set_parameter_of_aip(self,groupId,app_id,aip_id,secret_key):
+        self.groupId = groupId
         self.app_id = app_id
         self.aip_id = aip_id
         self.secret_key = secret_key
-        print('The app_id is {}'.format(self.app_id))
-        print('The aip_id is {}'.format(self.aip_id))
-        print('The secret_key is {}'.format(self.secret_key))
+        #print('The app_id is {}'.format(self.app_id))
+        #print('The aip_id is {}'.format(self.aip_id))
+        #print('The secret_key is {}'.format(self.secret_key))
 
 
     def start_server(self):
         self.client = AipFace(self.app_id,self.aip_id,self.secret_key)
-        print('start server successfully')
+        #print('start server successfully')
 
     def search_face(self,groupIdlist,picture):
         search_result = self.client.search(img_change_to_BASE64(picture),"BASE64",groupIdlist)
         return search_result
+
+
+    def return_user_list(self,groupid):
+         user_list = self.client.getGroupUsers(groupid);
+         return user_list
 
     def detect_face(self):
         option = {}
@@ -79,18 +86,18 @@ class Face_finder:
                           (255,255,0),
                           1)
 
-        cv2.namedWindow('show_face')
-        cv2.imshow('show_face',picture)
-        cv2.waitKey(0)
+        #cv2.namedWindow('show_face')
+        #cv2.imshow('show_face',picture)
+        #cv2.waitKey(0)
 
         return face_list
 
     def thread_for_detect_face(self,picture,locker,num):
-        result = self.search_face('test',picture)
+        result = self.search_face( self.groupId,picture)
         #进入临界区
         
         locker.acquire()
-        print("detect {}".format(result['result']['user_list'][0]['user_id']))
+        #print("detect {}".format(result['result']['user_list'][0]['user_id']))
         people = detected_people(result['result']['user_list'][0]['user_id'],num)
         self.result_list.append(people)
         locker.release()
